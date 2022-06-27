@@ -399,10 +399,10 @@ def setSignUpWindowFrame(frame, signUpWindow):
         userId = ID.get()
         realPassword = selectPassword(userId)
         userPassword = password.get()
-        if userId == '' or userPassword=='':
+        if userId == '' or userPassword == '':
             tkinter.messagebox.showinfo("注意", '姓名或密码不能为空')
             print('姓名或密码不能为空')
-        elif len(userPassword)<6:
+        elif len(userPassword) < 6:
             tkinter.messagebox.showinfo("注意", '密码长度过短')
             print('密码长度过短')
         else:
@@ -469,7 +469,7 @@ def setSignInWindowFrame(frame):
         userPassword = password.get()
         realPassword = selectPassword(userId)
         print(realPassword[0])
-        if realPassword[0] =='':
+        if realPassword[0] == '':
             tkinter.messagebox.showinfo('提示', '该用户未注册，请先注册')
         else:
             if realPassword[0] != userPassword:
