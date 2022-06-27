@@ -3,4 +3,4 @@ from data_operate import *
 createNameAndPassword()
 addDataNameAndPassword("张三", "123456")
 createRecord()
-addDataRecord("张三", "2022", "6", "18", "支出", "食品", "拉面店", 30)
+addDataRecord("张三", "2022", "06", "18", "支出", "食品", "拉面店", 30)

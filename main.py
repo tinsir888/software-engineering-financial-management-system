@@ -1,14 +1,16 @@
+# pylint: disable=C0116&&C0301&&C0103
 import csv
 from tkinter import *
 from tkinter import ttk, filedialog, dialog
-from turtle import undo
-from data_operate import *
 import tkinter.messagebox
+import profile
 
+# from main import *
+from data_operate import *
 from Calendar import Calendar
 
 
-############################################ for all window ###########################################
+########################################## for all window ##########################################
 
 def setStyle(signInWindow):
     signInWindow.configure(background=color)
@@ -75,10 +77,10 @@ def setWindowBasic(signInWindow, titleName, width, height):
     signInWindow.maxsize(width, height)  # 最大尺寸
 
 
-############################################ for all window ###########################################
+########################################## for all window ##########################################
 
 
-############################################ for main window ###########################################
+########################################## for main window #########################################
 
 def setFrame1(main_notebook, userID):
     frame1 = ttk.Frame(main_notebook, width=1000, height=600)
@@ -121,7 +123,7 @@ def setFrame1(main_notebook, userID):
         tb.pack(pady=20)
 
     refreshButton = Button(frame1, text="刷新页面", width=10, font=("Microsoft JhengHei", 15),
-                           command=lambda: refreshPage(frame1,userID), bg='#4A5360', foreground='white')
+                           command=lambda: refreshPage(frame1, userID), bg='#4A5360', foreground='white')
     refreshButton.place(x=800, y=490, width=132, height=40)
 
 
@@ -188,8 +190,8 @@ def setFrame2(main_notebook, userID):
         number = numberInputEntry.get()
         if name == "" or types == "" or date == "" or number == "":
             tkinter.messagebox.showinfo("注意", '有必填项为空')
-        if name != userID:
-            tkinter.messagebox.showinfo('注意','不能操作其他人的账户')
+        elif name != userID:
+            tkinter.messagebox.showinfo('注意', '不能操作其他人的账户')
         else:
             number = int(number)
             if number <= 0:
@@ -203,22 +205,24 @@ def setFrame2(main_notebook, userID):
         types = typeInputEntry.get()
         usage = usageInputEntry.get()
         more = moreInputEntry.get()
-        number = int(numberInputEntry.get())
-        if name == "" or types == "" or date == "":
+        number = numberInputEntry.get()
+        if name == "" or types == "" or date == "" or number == "":
             tkinter.messagebox.showinfo("注意", '有必填项为空')
-        if name != userID:
-            tkinter.messagebox.showinfo('注意','不能操作其他人的账户')
-        if number <= 0:
-            tkinter.messagebox.showinfo("注意", '金额必须大于零')
+        elif name != userID:
+            tkinter.messagebox.showinfo('注意', '不能操作其他人的账户')
         else:
-            deleteDataRecord(name, date[0], date[1], date[2], types, usage, more, number)
+            number = int(number)
+            if number <= 0:
+                tkinter.messagebox.showinfo("注意", '金额必须大于零')
+            else:
+                deleteDataRecord(name, date[0], date[1], date[2], types, usage, more, number)
 
     insertButton = Button(frame2, text="添加", width=10, font=("Microsoft JhengHei", 15),
-                          command=lambda: clickInsert(frame2, userID), bg='#4A5360', foreground='white')
+                          command=lambda: clickInsert(frame2), bg='#4A5360', foreground='white')
     insertButton.place(x=250 - 15, y=400 + 7, width=132, height=40)
 
     deleteButton = Button(frame2, text="删除", width=10, font=("Microsoft JhengHei", 15),
-                          command=lambda: clickDelete(frame2, userID), bg='#4A5360', foreground='white')
+                          command=lambda: clickDelete(frame2), bg='#4A5360', foreground='white')
     deleteButton.place(x=400 - 15, y=400 + 7, width=132, height=40)
 
 
@@ -238,33 +242,34 @@ def setFrame3(main_notebook, userID):
     yearLabel.place(x=150, y=360)
     yearInputEntry = Entry(frame3, width=7, font=("Microsoft JhengHei", 14), textvariable=type)
     yearInputEntry.place(x=350, y=362, height=28)
-    
+
     def OneYear(frame, userID):
         year = yearInputEntry.get()
         if year == "":
             tkinter.messagebox.showinfo("注意", '请输入年份')
         text.config(state=NORMAL)
         text.delete(1.0, END)
-        income, spend, borrow, lend, remain = queryStatistics('system.db', userID,year)
+        income, spend, borrow, lend, remain = queryStatistics(userID, year, 'system.db')
         # 创建一个文本控件
         # width 一行可见的字符数；height 显示的行数
         # INSERT 光标处插入；END 末尾处插入
-        text.insert(INSERT, "%s年总收入：%.2f元\n\n总支出：%.2f元\n\n总借入：%.2f元\n\n总借出：%.2f元\n\n账户剩余：%.2f元"%(\
-            year,income, spend, borrow, lend, remain))
+        text.insert(INSERT, "%s年总收入：%.2f元\n\n总支出：%.2f元\n\n总借入：%.2f元\n\n总借出：%.2f元\n\n账户剩余：%.2f元"
+                    % (year, income, spend, borrow, lend, remain))
         text.config(state=DISABLED)
 
     def AllYears(frame, userID):
         text.config(state=NORMAL)
         text.delete(1.0, END)
-        income, spend, borrow, lend, remain = queryStatistics('system.db', userID)
+        income, spend, borrow, lend, remain = queryStatistics(userID)
         # 创建一个文本控件
         # width 一行可见的字符数；height 显示的行数
         # INSERT 光标处插入；END 末尾处插入
-        text.insert(INSERT, "已记录总收入：%.2f元\n\n总支出：%.2f元\n\n总借入：%.2f元\n\n总借出：%.2f元\n\n账户剩余：%.2f元"%(\
-            income, spend, borrow, lend, remain))
+        text.insert(INSERT, "已记录总收入：%.2f元\n\n总支出：%.2f元\n\n总借入：%.2f元\n\n总借出：%.2f元\n\n账户剩余：%.2f元"
+                    % (income, spend, borrow, lend, remain))
         text.config(state=DISABLED)
+
     findyearButton = Button(frame3, text="查询该年数据", width=10, font=("Microsoft JhengHei", 15),
-                           command=lambda: OneYear(frame3, userID), bg='#4A5360', foreground='white')
+                            command=lambda: OneYear(frame3, userID), bg='#4A5360', foreground='white')
     findyearButton.place(x=500, y=360, width=165, height=40)
 
     findallButton = Button(frame3, text="查询总数据", width=10, font=("Microsoft JhengHei", 15),
@@ -328,22 +333,22 @@ def setFrame4(main_notebook, userID):
             tb.column('金额', width=200, minwidth=200, anchor=S)
 
             global record_data
-            record_data, sum = queryLimitRecords(year, month, 'system.db', userID)
+            record_data, sum = queryLimitRecords(year, month, userID, 'system.db')
             tb.delete(*tb.get_children())
             # print(record_data)
             for idx, data in enumerate(record_data):
                 # print(data)
                 tb.insert("", END, values=data)
             if sum >= 0:
-                data0 = [userID, year, month, 'all', '净收入', '', '', sum]
+                data0 = ['张三', year, month, 'all', '净收入', '', '', sum]
             else:
-                data0 = [userID, year, month, 'all', '净支出', '', '', -sum]
+                data0 = ['张三', year, month, 'all', '净支出', '', '', -sum]
             tb.insert("", END, values=data0)
             tb.pack(pady=20)
             file_path = filedialog.askopenfilename(title=u'导出记账凭证为csv文件')
             print("导出记账凭证的路径：", file_path)
             if file_path is not None:
-                with open(file=file_path, mode='a+', encoding='utf-8-sig') as file:
+                with open(file=file_path, mode='w+', encoding='utf-8-sig') as file:
                     csvwriter = csv.writer(file, delimiter=',')
                     for row_id in tb.get_children():
                         row = tb.item(row_id)['values']
@@ -365,10 +370,10 @@ def setFrames(main_notebook, userID):
     setFrame4(main_notebook, userID)
 
 
-############################################ for main window ###########################################
+########################################## for main window ##########################################
 
 
-############################################ for sign window ###########################################
+########################################## for sign window ##########################################
 
 def setSignUpWindowFrame(frame, signUpWindow):
     frame.pack(side=TOP)
@@ -394,11 +399,11 @@ def setSignUpWindowFrame(frame, signUpWindow):
         userId = ID.get()
         userpassword = password.get()
         realPassword = selectPassword(userId)
-        if realPassword != None:
-            tkinter.messagebox.showinfo('提示', '已注册用户名，请修改为未使用的用户名')
-        elif len(userpassword)<6:
+        if len(userpassword) < 6:
             tkinter.messagebox.showinfo('提示', '密码长度过短')
         else:
+            if realPassword is not None:
+                tkinter.messagebox.showinfo('提示', '已注册用户名,已为您更新密码')
             userPassword = password.get()
             addDataNameAndPassword(userId, userPassword)
 
@@ -459,7 +464,7 @@ def setSignInWindowFrame(frame):
         userPassword = password.get()
         realPassword = selectPassword(userId)
 
-        if realPassword == None:
+        if realPassword is None:
             tkinter.messagebox.showinfo('提示', '未注册，请先注册')
         else:
             if realPassword[0] != userPassword:
@@ -481,7 +486,7 @@ def setSignInWindowFrame(frame):
                 # note book
                 main_notebook = ttk.Notebook(frame_main_notebook, width=1000, height=600)
                 main_notebook.pack(side=TOP, expand=1, fill='both')
-                setFrames(main_notebook,userId)
+                setFrames(main_notebook, userId)
 
                 mainWindow.mainloop()
 
@@ -493,13 +498,14 @@ def setSignInWindowFrame(frame):
                          bg='#4A5360', foreground='white')
     loginButton.place(x=205 - 35 + 148, y=200 + 7, width=132, height=40)
 
-    return ID.get()
 
+######################################### for sign window ##########################################
 
-############################################ for sign window ###########################################
+def main():
+    signInWindow.mainloop()
+
 
 if __name__ == '__main__':
-
     signInWindow = Tk()
     setWindowBasic(signInWindow, "登录", 600, 360)
 
@@ -508,7 +514,7 @@ if __name__ == '__main__':
 
     color = '#21252b'
     setStyle(signInWindow)
+    setSignInWindowFrame(frame)
 
-    ID = setSignInWindowFrame(frame)
-
-    signInWindow.mainloop()
+    profile.run("main()")
+    # main()

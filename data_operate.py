@@ -1,5 +1,7 @@
 # coding=utf-8
+# pylint: disable=C0116
 import sqlite3
+
 
 def createNameAndPassword(db='system.db'):
     """
@@ -12,14 +14,14 @@ def createNameAndPassword(db='system.db'):
           "(" \
           "    \"name\" text NOT NULL," \
           "    \"password\" text NOT NULL," \
-          "    PRIMARY KEY (\"name\", \"password\")" \
+          "    PRIMARY KEY (\"name\")" \
           ");"
     for i in str.split(';'):
         cur.execute(i)
     conn.commit()
     cur.close()
     conn.close()
-    print('\n创建数据库%s成功' % db)
+    print('创建数据库%s成功' % db)
 
 
 def createRecord(db='system.db'):
@@ -45,7 +47,7 @@ def createRecord(db='system.db'):
     conn.commit()
     cur.close()
     conn.close()
-    print('\n创建数据库%s成功' % db)
+    print('创建数据库%s成功' % db)
 
 
 def addDataNameAndPassword(name, password, db='system.db'):
@@ -62,12 +64,15 @@ def addDataNameAndPassword(name, password, db='system.db'):
         cur.execute("insert into nameAndPassword values('%s','%s')" % (name, password))
         conn.commit()
         print('添加数据成功')
-        return True
     except:
-        print('您已注册')
+        try:
+            updateData(name, password)
+        except:
+            print('您已注册,已帮您更新密码')
         return False
     cur.close()
     conn.close()
+    return True
 
 
 def addDataRecord(name, year, month, day, types, usage, more, number, db='system.db'):
@@ -83,22 +88,24 @@ def addDataRecord(name, year, month, day, types, usage, more, number, db='system
         return False
     cur.close()
     conn.close()
+    return True
 
 
 def deleteDataRecord(name, year, month, day, types, usage, more, number, db='system.db'):
     conn = sqlite3.connect(db)
     cur = conn.cursor()
-    try:
-        cur.execute(
-            "delete from record where name=='%s' and year=='%s' and month=='%s' and day=='%s' and types=='%s' and usage=='%s' and more=='%s' and number==%d"
-            % (name, year, month, day, types, usage, more, number))
-        conn.commit()
-        print('删除数据成功')
-    except:
-        print('删除数据失败')
+    cur.execute(
+        "delete from record where name=='%s' and year=='%s' and month=='%s' "
+        "and day=='%s' and types=='%s' and usage=='%s' and more=='%s' and number==%d"
+        % (name, year, month, day, types, usage, more, number))
+    conn.commit()
+    if cur.rowcount == 0:
+        print('没有这条记录')
         return False
+    print('删除数据成功')
     cur.close()
     conn.close()
+    return True
 
 
 def selectPassword(name, db='system.db'):
@@ -106,10 +113,13 @@ def selectPassword(name, db='system.db'):
     cur = conn.cursor()
     cur.execute("select password from nameAndPassword where name = '%s'" % name)
     res = cur.fetchone()
-    # print(res)
+    if res:
+        print('查询数据成功')
+    else:
+        res = ('',)
+        print('未找到查询数据')
     cur.close()
     conn.close()
-    print('查询数据成功')
     return res
 
 
@@ -122,7 +132,7 @@ def queryAll(db='system.db'):
         print(row)
     cur.close()
     conn.close()
-    print('打印数据成功')
+    print('打印用户信息成功')
 
 
 def queryAllRecords(db='system.db', userID=''):
@@ -134,54 +144,71 @@ def queryAllRecords(db='system.db', userID=''):
     ret = cur.fetchall()
     cur.close()
     conn.close()
-    print('successfully fetch all records!')
+    print('打印收支记录成功')
     return ret
 
 
-def updateData(number, result, db='system.db'):
+def updateData(name, password, db='system.db'):
     conn = sqlite3.connect(db)
     cur = conn.cursor()
-    cur.execute("update nameAndPassword set result= '%s' where number = %s" % (result, number))
+    cur.execute("update nameAndPassword set password= '%s' where name = '%s'" % (password, name))
     conn.commit()
     cur.close()
     conn.close()
     print('更新数据成功')
+    return True
 
-def queryLimitRecords(yea, mon, db='system.db', userID=''):
+
+def queryLimitRecords(yea, mon, userID='', db='system.db'):
     """
     创建指定月份范围内记账凭证
     """
     conn = sqlite3.connect(db)
     cur = conn.cursor()
     if mon == "全年":
-        cur.execute("select * from record where year= '%s' and name = '%s' " % (yea, userID))
+        cur.execute("select * from record where year= '%s'  and name = '%s'" % (yea, userID))
     else:
-        cur.execute("select * from record where year= '%s' and month= '%s' and name= '%s' " % (yea, mon, userID))
+        cur.execute("select * from record where year= '%s' and month= '%s' and name = '%s'" % (yea, mon, userID))
     ret = cur.fetchall()
     cur.close()
-    cur2 = conn.cursor()
     cur3 = conn.cursor()
     cur4 = conn.cursor()
     cur5 = conn.cursor()
-    cur2.execute("select sum(number) from record where year= '%s' and month= '%s' and types= '收入' and name = '%s' " % (yea, mon, userID))
-    cur3.execute("select sum(number) from record where year= '%s' and month= '%s' and types= '支出' and name = '%s' " % (yea, mon, userID))
-    cur4.execute("select sum(number) from record where year= '%s' and month= '%s' and types= '借入' and name = '%s' " % (yea, mon, userID))
-    cur5.execute("select sum(number) from record where year= '%s' and month= '%s' and types= '借出' and name = '%s' " % (yea, mon, userID))
+    cur2 = conn.cursor()
+    if mon == "全年":
+        cur2.execute("select sum(number) from record where year= '%s' and types= '收入' and name = '%s'" % (yea, userID))
+        cur3.execute("select sum(number) from record where year= '%s' and types= '支出' and name = '%s'" % (yea, userID))
+        cur4.execute("select sum(number) from record where year= '%s' and types= '借入' and name = '%s'" % (yea, userID))
+        cur5.execute("select sum(number) from record where year= '%s' and types= '借出' and name = '%s'" % (yea, userID))
+    else:
+        cur2.execute(
+            "select sum(number) from record where year= '%s' and month= '%s' and types= '收入' and name = '%s'" % (
+                yea, mon, userID))
+        cur3.execute(
+            "select sum(number) from record where year= '%s' and month= '%s' and types= '支出' and name = '%s'" % (
+                yea, mon, userID))
+        cur4.execute(
+            "select sum(number) from record where year= '%s' and month= '%s' and types= '借入' and name = '%s'" % (
+                yea, mon, userID))
+        cur5.execute(
+            "select sum(number) from record where year= '%s' and month= '%s' and types= '借出' and name = '%s'" % (
+                yea, mon, userID))
     sum2 = cur2.fetchone()[0]
     sum3 = cur3.fetchone()[0]
     sum4 = cur4.fetchone()[0]
     sum5 = cur5.fetchone()[0]
-    sum = (sum2 if sum2 != None else 0) - (sum3 if sum3 != None else 0) + (sum4 if sum4 != None else 0) - (
-        sum5 if sum5 != None else 0)
+    sum = (sum2 if sum2 is not None else 0) - (sum3 if sum3 is not None else 0) + \
+          (sum4 if sum4 is not None else 0) - (sum5 if sum5 is not None else 0)
     cur2.close()
     cur3.close()
     cur4.close()
     cur5.close()
     conn.close()
-    # print('successfully fetch records!')
+    print('已创建记账凭证')
     return ret, sum
 
-def queryStatistics(db='system.db', userID='',year='-1'):
+
+def queryStatistics(userID='', year='-1', db='system.db'):
     """
     查询总收入、总支出、总借入、总借出、账户剩余
     返回：总收入、总支出、总借入、总借出、账户剩余
@@ -191,16 +218,20 @@ def queryStatistics(db='system.db', userID='',year='-1'):
     cur3 = conn.cursor()
     cur4 = conn.cursor()
     cur5 = conn.cursor()
-    if year=='-1':
-        cur2.execute("select sum(number) from record where types= '收入' and name = '%s'" % (userID))
-        cur3.execute("select sum(number) from record where types= '支出' and name = '%s'" % (userID))
-        cur4.execute("select sum(number) from record where types= '借入' and name = '%s'" % (userID))
-        cur5.execute("select sum(number) from record where types= '借出' and name = '%s'" % (userID))
+    if year == '-1':
+        cur2.execute("select sum(number) from record where types= '收入' and name = '%s'" % userID)
+        cur3.execute("select sum(number) from record where types= '支出' and name = '%s'" % userID)
+        cur4.execute("select sum(number) from record where types= '借入' and name = '%s'" % userID)
+        cur5.execute("select sum(number) from record where types= '借出' and name = '%s'" % userID)
     else:
-        cur2.execute("select sum(number) from record where types= '收入' and name = '%s' and year = '%s'" % (userID,year))
-        cur3.execute("select sum(number) from record where types= '支出' and name = '%s' and year = '%s'" % (userID,year))
-        cur4.execute("select sum(number) from record where types= '借入' and name = '%s' and year = '%s'" % (userID,year))
-        cur5.execute("select sum(number) from record where types= '借出' and name = '%s' and year = '%s'" % (userID,year))
+        cur2.execute(
+            "select sum(number) from record where types= '收入' and name = '%s' and year = '%s'" % (userID, year))
+        cur3.execute(
+            "select sum(number) from record where types= '支出' and name = '%s' and year = '%s'" % (userID, year))
+        cur4.execute(
+            "select sum(number) from record where types= '借入' and name = '%s' and year = '%s'" % (userID, year))
+        cur5.execute(
+            "select sum(number) from record where types= '借出' and name = '%s' and year = '%s'" % (userID, year))
     tot_income = cur2.fetchone()[0]
     tot_expenditure = cur3.fetchone()[0]
     tot_borrow = cur4.fetchone()[0]
@@ -216,12 +247,11 @@ def queryStatistics(db='system.db', userID='',year='-1'):
     tot_borrow = (0 if tot_borrow==None else tot_borrow)
     tot_lend = (0 if tot_lend==None else tot_lend)
     '''
-    tot_remain = (0 if tot_income==None else tot_income)+(0 if tot_borrow==None else tot_borrow)-\
-        (0 if tot_expenditure==None else tot_expenditure)-(0 if tot_lend==None else tot_lend)
-    print(tot_income,tot_expenditure,tot_borrow,tot_lend,tot_remain)
-    return (0 if tot_income==None else tot_income), \
-        (0 if tot_expenditure==None else tot_expenditure), \
-        (0 if tot_borrow==None else tot_borrow), \
-        (0 if tot_lend==None else tot_lend), \
-        tot_remain
-    
+    tot_remain = (0 if tot_income is None else tot_income) + (0 if tot_borrow is None else tot_borrow) - \
+                 (0 if tot_expenditure is None else tot_expenditure) - (0 if tot_lend is None else tot_lend)
+    print('收入:', tot_income, '支出:', tot_expenditure, '借入:', tot_borrow, '借出:', tot_lend, '盈亏:', tot_remain)
+    return (0 if tot_income is None else tot_income), \
+           (0 if tot_expenditure is None else tot_expenditure), \
+           (0 if tot_borrow is None else tot_borrow), \
+           (0 if tot_lend is None else tot_lend), \
+           tot_remain
