@@ -218,11 +218,11 @@ def setFrame2(main_notebook, userID):
                 deleteDataRecord(name, date[0], date[1], date[2], types, usage, more, number)
 
     insertButton = Button(frame2, text="添加", width=10, font=("Microsoft JhengHei", 15),
-                          command=lambda: clickInsert(frame2), bg='#4A5360', foreground='white')
+                          command=lambda: clickInsert(frame2, userID), bg='#4A5360', foreground='white')
     insertButton.place(x=250 - 15, y=400 + 7, width=132, height=40)
 
     deleteButton = Button(frame2, text="删除", width=10, font=("Microsoft JhengHei", 15),
-                          command=lambda: clickDelete(frame2), bg='#4A5360', foreground='white')
+                          command=lambda: clickDelete(frame2, userID), bg='#4A5360', foreground='white')
     deleteButton.place(x=400 - 15, y=400 + 7, width=132, height=40)
 
 
@@ -397,15 +397,20 @@ def setSignUpWindowFrame(frame, signUpWindow):
 
     def signUpConfirmed(signUpWindow):
         userId = ID.get()
-        userpassword = password.get()
         realPassword = selectPassword(userId)
-        if len(userpassword) < 6:
-            tkinter.messagebox.showinfo('提示', '密码长度过短')
+        userPassword = password.get()
+        if userId == '' or userPassword=='':
+            tkinter.messagebox.showinfo("注意", '姓名或密码不能为空')
+            print('姓名或密码不能为空')
+        elif len(userPassword)<6:
+            tkinter.messagebox.showinfo("注意", '密码长度过短')
+            print('密码长度过短')
         else:
             if realPassword is not None:
                 tkinter.messagebox.showinfo('提示', '已注册用户名,已为您更新密码')
-            userPassword = password.get()
-            addDataNameAndPassword(userId, userPassword)
+                updateData(userId, userPassword)
+            else:
+                addDataNameAndPassword(userId, userPassword)
 
             signUpWindow.destroy()
             signInWindow.attributes('-disabled', 0)
@@ -463,9 +468,9 @@ def setSignInWindowFrame(frame):
         userId = ID.get()
         userPassword = password.get()
         realPassword = selectPassword(userId)
-
-        if realPassword is None:
-            tkinter.messagebox.showinfo('提示', '未注册，请先注册')
+        print(realPassword[0])
+        if realPassword[0] =='':
+            tkinter.messagebox.showinfo('提示', '该用户未注册，请先注册')
         else:
             if realPassword[0] != userPassword:
                 tkinter.messagebox.showinfo('提示', '密码错误！')

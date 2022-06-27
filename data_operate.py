@@ -1,7 +1,9 @@
 # coding=utf-8
 # pylint: disable=C0116
 import sqlite3
-
+from tkinter import *
+from tkinter import ttk, filedialog, dialog
+import tkinter.messagebox
 
 def createNameAndPassword(db='system.db'):
     """
@@ -51,28 +53,15 @@ def createRecord(db='system.db'):
 
 
 def addDataNameAndPassword(name, password, db='system.db'):
-    if name.strip() == '':
-        print('姓名不能为空')
-        return False
-    if password.strip() == '':
-        print('密码不能为空')
-        return False
 
     conn = sqlite3.connect(db)
     cur = conn.cursor()
-    try:
-        cur.execute("insert into nameAndPassword values('%s','%s')" % (name, password))
-        conn.commit()
-        print('添加数据成功')
-    except:
-        try:
-            updateData(name, password)
-        except:
-            print('您已注册,已帮您更新密码')
-        return False
+    cur.execute("insert into nameAndPassword values('%s','%s')" % (name, password))
+    conn.commit()
     cur.close()
     conn.close()
-    return True
+    tkinter.messagebox.showinfo('提示', '注册成功')
+    print('添加数据成功')
 
 
 def addDataRecord(name, year, month, day, types, usage, more, number, db='system.db'):
@@ -82,8 +71,10 @@ def addDataRecord(name, year, month, day, types, usage, more, number, db='system
         cur.execute("insert into record values('%s','%s','%s','%s','%s','%s','%s',%d)" % (
             name, year, month, day, types, usage, more, number))
         conn.commit()
+        tkinter.messagebox.showinfo("提示", '数据添加成功')
         print('添加数据成功')
     except:
+        tkinter.messagebox.showinfo("注意", '数据添加失败')
         print('添加数据失败')
         return False
     cur.close()
@@ -100,8 +91,10 @@ def deleteDataRecord(name, year, month, day, types, usage, more, number, db='sys
         % (name, year, month, day, types, usage, more, number))
     conn.commit()
     if cur.rowcount == 0:
+        tkinter.messagebox.showinfo("注意", '没有该记录，删除失败')
         print('没有这条记录')
         return False
+    tkinter.messagebox.showinfo("提示", '成功删除')
     print('删除数据成功')
     cur.close()
     conn.close()
@@ -156,7 +149,6 @@ def updateData(name, password, db='system.db'):
     cur.close()
     conn.close()
     print('更新数据成功')
-    return True
 
 
 def queryLimitRecords(yea, mon, userID='', db='system.db'):
