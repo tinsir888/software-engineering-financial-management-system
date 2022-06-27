@@ -125,10 +125,11 @@ def queryAll(db='system.db'):
     print('打印数据成功')
 
 
-def queryAllRecords(db='system.db'):
+def queryAllRecords(db='system.db', userID=''):
     conn = sqlite3.connect(db)
     cur = conn.cursor()
-    sql = "select * from record"
+    print(userID)
+    sql = "select * from record where name = '%s'" % (userID)
     cur.execute(sql)
     ret = cur.fetchall()
     cur.close()
@@ -146,26 +147,26 @@ def updateData(number, result, db='system.db'):
     conn.close()
     print('更新数据成功')
 
-def queryLimitRecords(yea, mon, db='system.db'):
+def queryLimitRecords(yea, mon, db='system.db', userID=''):
     """
     创建指定月份范围内记账凭证
     """
     conn = sqlite3.connect(db)
     cur = conn.cursor()
     if mon == "全年":
-        cur.execute("select * from record where year= '%s' " % (yea))
+        cur.execute("select * from record where year= '%s' and name = '%s' " % (yea, userID))
     else:
-        cur.execute("select * from record where year= '%s' and month= '%s'" % (yea, mon))
+        cur.execute("select * from record where year= '%s' and month= '%s' and name= '%s' " % (yea, mon, userID))
     ret = cur.fetchall()
     cur.close()
     cur2 = conn.cursor()
     cur3 = conn.cursor()
     cur4 = conn.cursor()
     cur5 = conn.cursor()
-    cur2.execute("select sum(number) from record where year= '%s' and month= '%s' and types= '收入'" % (yea, mon))
-    cur3.execute("select sum(number) from record where year= '%s' and month= '%s' and types= '支出'" % (yea, mon))
-    cur4.execute("select sum(number) from record where year= '%s' and month= '%s' and types= '借入'" % (yea, mon))
-    cur5.execute("select sum(number) from record where year= '%s' and month= '%s' and types= '借出'" % (yea, mon))
+    cur2.execute("select sum(number) from record where year= '%s' and month= '%s' and types= '收入' and name = '%s' " % (yea, mon, userID))
+    cur3.execute("select sum(number) from record where year= '%s' and month= '%s' and types= '支出' and name = '%s' " % (yea, mon, userID))
+    cur4.execute("select sum(number) from record where year= '%s' and month= '%s' and types= '借入' and name = '%s' " % (yea, mon, userID))
+    cur5.execute("select sum(number) from record where year= '%s' and month= '%s' and types= '借出' and name = '%s' " % (yea, mon, userID))
     sum2 = cur2.fetchone()[0]
     sum3 = cur3.fetchone()[0]
     sum4 = cur4.fetchone()[0]
@@ -180,7 +181,7 @@ def queryLimitRecords(yea, mon, db='system.db'):
     # print('successfully fetch records!')
     return ret, sum
 
-def queryStatistics(db='system.db'):
+def queryStatistics(db='system.db', userID='',year='-1'):
     """
     查询总收入、总支出、总借入、总借出、账户剩余
     返回：总收入、总支出、总借入、总借出、账户剩余
@@ -190,10 +191,16 @@ def queryStatistics(db='system.db'):
     cur3 = conn.cursor()
     cur4 = conn.cursor()
     cur5 = conn.cursor()
-    cur2.execute("select sum(number) from record where types= '收入'")
-    cur3.execute("select sum(number) from record where types= '支出'")
-    cur4.execute("select sum(number) from record where types= '借入'")
-    cur5.execute("select sum(number) from record where types= '借出'")
+    if year=='-1':
+        cur2.execute("select sum(number) from record where types= '收入' and name = '%s'" % (userID))
+        cur3.execute("select sum(number) from record where types= '支出' and name = '%s'" % (userID))
+        cur4.execute("select sum(number) from record where types= '借入' and name = '%s'" % (userID))
+        cur5.execute("select sum(number) from record where types= '借出' and name = '%s'" % (userID))
+    else:
+        cur2.execute("select sum(number) from record where types= '收入' and name = '%s' and year = '%s'" % (userID,year))
+        cur3.execute("select sum(number) from record where types= '支出' and name = '%s' and year = '%s'" % (userID,year))
+        cur4.execute("select sum(number) from record where types= '借入' and name = '%s' and year = '%s'" % (userID,year))
+        cur5.execute("select sum(number) from record where types= '借出' and name = '%s' and year = '%s'" % (userID,year))
     tot_income = cur2.fetchone()[0]
     tot_expenditure = cur3.fetchone()[0]
     tot_borrow = cur4.fetchone()[0]
