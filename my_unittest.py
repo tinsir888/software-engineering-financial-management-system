@@ -109,7 +109,7 @@ class MyTestCase(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    # unittest.main(verbosity=2)
+    unittest.main(verbosity=2)
     suite = unittest.TestSuite()
     test = unittest.defaultTestLoader.loadTestsFromModule(MyTestCase)
     suite.addTests(test)
